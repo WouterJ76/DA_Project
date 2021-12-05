@@ -59,4 +59,6 @@ erl_crash.dump
 # Support for Project snippet scope
 !.vscode/*.code-snippets
 
+.formatter.exs
+
 # End of https://www.toptal.com/developers/gitignore/api/elixir,visualstudiocode
