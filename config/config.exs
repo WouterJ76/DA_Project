@@ -15,5 +15,5 @@ config :amqp,
   ],
   channels: [
     webserver_channel: [connection: :publish_tcp_connection],
-    garbage_can_channel: [connection: :consume_tcp_connection]
+    chat_app_channel: [connection: :consume_tcp_connection]
   ]
