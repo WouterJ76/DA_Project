@@ -9,6 +9,9 @@ defmodule TwitterClone.Application do
     children = [
       # Starts a worker by calling: TwitterClone.Worker.start_link(arg)
       # {TwitterClone.Worker, arg}
+      {Registry, keys: :unique, name: TwitterClone.MyRegistry},
+      {DynamicSupervisor, strategy: :one_for_one, name: TwitterClone.UserDynSup},
+      {TwitterClone.UserManager, []},
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
