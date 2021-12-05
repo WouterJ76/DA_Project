@@ -1,23 +1,19 @@
-defmodule ChatSessie.Application do
-    # See https://hexdocs.pm/elixir/Application.html
-    # for more information on OTP Applications
-    @moduledoc false
+defmodule TwitterClone.ChatApp.Supervisor do
+    use Supervisor
+
+    def start_link(init_arg) do
+        Supervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
+    end
   
-    use Application
-  
-    def start(_type, _args) do
+    @impl true
+    def init(_init_arg) do
       children = [
-        # Starts a worker by calling: TwitterClone.Worker.start_link(arg)
-        # {TwitterClone.Worker, arg}
-        {Registry, keys: :unique, name: TwitterClone.MyRegistry},
-        {DynamicSupervisor, strategy: :one_for_one, name: ChatSessie.UserDynSup},
-        {TwitterClone.UserManager, []},
+        {Registry, keys: :unique, name: TwitterClone.ChatApp.MyRegistry},
+        {DynamicSupervisor, strategy: :one_for_one, name: TwitterClone.ChatApp.ChatDynSup},
+        {TwitterClone.ChatApp.ChatManager, []},
       ]
-  
-      # See https://hexdocs.pm/elixir/Supervisor.html
-      # for other strategies and supported options
-      opts = [strategy: :one_for_one, name: TwitterClone.Supervisor]
-      Supervisor.start_link(children, opts)
+
+      Supervisor.init(children, strategy: :one_for_one)
     end
   end
   

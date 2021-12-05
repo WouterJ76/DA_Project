@@ -1,4 +1,4 @@
-defmodule UserApp.User do
+defmodule TwitterClone.UserApp.User do
     use GenServer
 
     @me __MODULE__
@@ -15,25 +15,8 @@ defmodule UserApp.User do
         {:ok, args}
     end
 
-    # @impl true
-    # def handle_call(:empty, _from, %@me{} = state) do
-    #     # Logger.debug("#{inspect(self())}: I'm being emptied!")
-    #     {:reply, :ok, %{state | percentage: 0}, {:continue, :report}}
-    # end
-
-    # @impl true
-    # def handle_info(:add_garbage, %@me{} = state) do
-    #     # {:noreply, %{state | percentage: state.percentage + 10}, {:continue, :report}}
-    # end
-
-    # @impl true
-    # def handle_continue(:report, %@me{} = state) do
-    #     # ManagerApproach.GarbageCanManager.report_garbage_level(state.personal_id, state.percentage)
-    #     # {:noreply, state}
-    # end
-
     defp via_tuple(username) do
-        {:via, Registry, {UserApp.MyRegistry, {:user, username}}}
+        {:via, Registry, {TwitterClone.UserApp.MyRegistry, {:user, username}}}
     end
     
 end

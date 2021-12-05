@@ -1,22 +1,18 @@
-defmodule UserApp.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
-  @moduledoc false
+defmodule TwitterClone.UserApp.Supervisor do
+  use Supervisor
 
-  use Application
+  def start_link(init_arg) do
+    Supervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
+  end
 
-  def start(_type, _args) do
+  @impl true
+  def init(_init_arg) do
     children = [
-      # Starts a worker by calling: UserApp.Worker.start_link(arg)
-      # {UserApp.Worker, arg}
-      {Registry, keys: :unique, name: UserApp.MyRegistry},
-      {DynamicSupervisor, strategy: :one_for_one, name: UserApp.UserDynSup},
-      {UserApp.UserManager, []},
+      {Registry, keys: :unique, name: TwitterClone.UserApp.MyRegistry},
+      {DynamicSupervisor, strategy: :one_for_one, name: TwitterClone.UserApp.UserDynSup},
+      {TwitterClone.UserApp.UserManager, []},
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: UserApp.Supervisor]
-    Supervisor.start_link(children, opts)
+    Supervisor.init(children, strategy: :one_for_one)
   end
 end
