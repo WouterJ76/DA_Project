@@ -11,6 +11,7 @@ defmodule TwitterClone.ChatApp.Supervisor do
         {Registry, keys: :unique, name: TwitterClone.ChatApp.MyRegistry},
         {DynamicSupervisor, strategy: :one_for_one, name: TwitterClone.ChatApp.ChatDynSup},
         {TwitterClone.ChatApp.ChatManager, []},
+        TwitterClone.ChatApp.ChatSessieConsumer
       ]
 
       Supervisor.init(children, strategy: :one_for_one)
