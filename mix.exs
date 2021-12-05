@@ -1,4 +1,4 @@
-defmodule TwitterClone.MixProject do
+defmodule UserApp.MixProject do
   use Mix.Project
 
   def project do
@@ -15,7 +15,7 @@ defmodule TwitterClone.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {TwitterClone.Application, []}
+      mod: {UserApp.Application, []}
     ]
   end
 

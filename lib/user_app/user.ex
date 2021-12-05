@@ -1,9 +1,9 @@
-defmodule TwitterClone.User do
+defmodule UserApp.User do
     use GenServer
 
     @me __MODULE__
 
-    defstruct username: nil, friends: %{}
+    defstruct username: nil
 
     def start_link(args) do
         username = args[:username] || raise "No username found \":username\""
@@ -33,7 +33,7 @@ defmodule TwitterClone.User do
     # end
 
     defp via_tuple(username) do
-        {:via, Registry, {TwitterClone.MyRegistry, {:user, username}}}
+        {:via, Registry, {UserApp.MyRegistry, {:user, username}}}
     end
     
 end

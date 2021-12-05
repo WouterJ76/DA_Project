@@ -1,7 +1,7 @@
-defmodule TwitterClone.UserManager do
+defmodule UserApp.UserManager do
     use GenServer
 
-    alias TwitterClone.{User, UserDynSup}
+    alias UserApp.{User, UserDynSup}
 
     @me __MODULE__
     defstruct users: %{}
