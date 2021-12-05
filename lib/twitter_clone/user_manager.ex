@@ -13,10 +13,6 @@ defmodule TwitterClone.UserManager do
     def add_user(username) do
         GenServer.call(@me, {:create_user, username})
     end
-    
-    def add_friend(uid,friend) do
-        GenServer.cast(@me, {:add_friend, uid,friend})
-    end
 
     def list_users(), do: GenServer.call(@me, :list_users)
 
@@ -44,15 +40,6 @@ defmodule TwitterClone.UserManager do
     @impl true
     def handle_call(:list_users, _from, state) do
         {:reply, state.users, state}
-    end
-
-    @impl true
-    def handle_cast({:add_friend, uid, friend}, %@me{} = state) do
-        User.add_friend(uid, friend)
-        new_users = Map.put(state.users, uid, friend)
-        new_state = %{state | users: new_users}
-
-        {:reply, new_state}
     end
 
     # @impl true
