@@ -42,28 +42,29 @@ defmodule TwitterClone.ChatApp.ChatSessieConsumer do
     def handle_info({:basic_deliver, payload, meta_info}, %@me{} = state) do
       payload
       |> Jason.decode!()
-      |> proces_message(meta_info.delivery_tag, state)
+      # |> proces_message(meta_info.delivery_tag, state)
+      |> IO.puts()
   
       {:noreply, %@me{} = state}
     end
   
     ## Helper functions ##
   
-    defp proces_message(%{"command" => "create", "name_can" => can_id} = msg, tag, state) do
-      result = ManagerApproach.GarbageCanManager.add_garbage_can(can_id)
-      Basic.ack(state.channel, tag)
+    # defp proces_message(%{"command" => "create", "name_can" => can_id} = msg, tag, state) do
+    #   result = ManagerApproach.GarbageCanManager.add_garbage_can(can_id)
+    #   Basic.ack(state.channel, tag)
   
-      # Note: not always necessary to send the whole request back. If frontend would keep track of the request unique tag, then you should only send that tag and the result back in order to reduce bandwidth.
-      case result do
-        {:ok, _} ->
-          %{request: msg, result: "succeeded"}
-          |> ManagerApproach.WebserverPublisher.send_message()
+    #   # Note: not always necessary to send the whole request back. If frontend would keep track of the request unique tag, then you should only send that tag and the result back in order to reduce bandwidth.
+    #   case result do
+    #     {:ok, _} ->
+    #       %{request: msg, result: "succeeded"}
+    #       |> ManagerApproach.WebserverPublisher.send_message()
   
-        {:error, :already_exists} ->
-          %{request: msg, result: "failed", reason: "Already exists"}
-          |> ManagerApproach.WebserverPublisher.send_message()
-      end
-    end
+    #     {:error, :already_exists} ->
+    #       %{request: msg, result: "failed", reason: "Already exists"}
+    #       |> ManagerApproach.WebserverPublisher.send_message()
+    #   end
+    # end
   
     defp rabbitmq_setup(%@me{} = state) do
       # Create exchange, queue and bind them.

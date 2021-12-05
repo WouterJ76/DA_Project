@@ -11,7 +11,7 @@ defmodule TwitterClone.UserApp.Supervisor do
       {Registry, keys: :unique, name: TwitterClone.UserApp.MyRegistry},
       {DynamicSupervisor, strategy: :one_for_one, name: TwitterClone.UserApp.UserDynSup},
       {TwitterClone.UserApp.UserManager, []},
-      # TwitterClone.UserApp.ChatSessiePublisher
+      TwitterClone.UserApp.ChatSessiePublisher
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

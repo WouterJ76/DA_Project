@@ -15,9 +15,9 @@ defmodule TwitterClone.UserApp.ChatSessiePublisher do
     # ## API ##
   
     def start_link(_args \\ []), do: GenServer.start_link(@me, :no_opts, name: @me)
-    # def start_chat(user1, user2), do: GenServer.call(@me, {:start_chat, user1, user2})
-    # # def get_chatlog({user1, user2}), do: GenServer.call(@me, {:get_chatlog, {user1, user2}})
-    # # def send_message({user1, user2}, message), do: GenServer.call(@me, {:send_message, user1, user2})
+    def start_chat(user1, user2), do: GenServer.call(@me, {:start_chat, user1, user2})
+    def get_chatlog({user1, user2}), do: GenServer.call(@me, {:get_chatlog, {user1, user2}})
+    def send_message({user1, user2}, message), do: GenServer.call(@me, {:send_message, {user1, user2}})
   
     # ## Callbacks ##
   
@@ -30,20 +30,26 @@ defmodule TwitterClone.UserApp.ChatSessiePublisher do
         {:ok, state}
     end
   
-    # @impl true
-    # def handle_call({:start_chat, user1, user2}, _, %@me{channel: c} = state) do
-    #     payload = Jason.encode!(%{command: "create", user1: user1, user2: user2})
-    #     :ok = AMQP.Basic.publish(c, @exchange, @queue, payload)
-    #     {:reply, :chat_started, state}
-    # end
+    @impl true
+    def handle_call({:start_chat, user1, user2}, _, %@me{channel: c} = state) do
+        payload = Jason.encode!(%{command: "create", user1: user1, user2: user2})
+        :ok = AMQP.Basic.publish(c, @exchange, @queue, payload)
+        {:reply, :chat_started, state}
+    end
 
-    # # def handle_call({:get_chatlog, {user1, user2}}, _, %@me{channel: c} = state) do
-    # #     payload = Jason.encode!(%{command: "get", chatroom: {user1, user2}})
-    # #     :ok = AMQP.Basic.publish(c, @exchange, @queue, payload)
-    # #     {:reply, :chat_started, state}
-    # # end
+    def handle_call({:get_chatlog, {user1, user2}}, _, %@me{channel: c} = state) do
+        payload = Jason.encode!(%{command: "get", chatroom: {user1, user2}})
+        :ok = AMQP.Basic.publish(c, @exchange, @queue, payload)
+        {:reply, :chat_started, state}
+    end
+
+    def handle_call({:send_message, {user1, user2}}, _, %@me{channel: c} = state) do
+        payload = Jason.encode!(%{command: "get", chatroom: {user1, user2}})
+        :ok = AMQP.Basic.publish(c, @exchange, @queue, payload)
+        {:reply, :chat_started, state}
+    end
   
-    # ## Helper functions ##
+    ## Helper functions ##
   
     defp rabbitmq_setup(%@me{} = state) do
         # Create exchange, queue and bind them.
