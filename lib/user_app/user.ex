@@ -12,7 +12,8 @@ defmodule TwitterClone.UserApp.User do
 
     @impl true
     def init(args) do
-        {:ok, args}
+        state = %@me{username: args}
+        {:ok, state}
     end
 
     defp via_tuple(username) do
