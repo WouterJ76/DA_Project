@@ -1,7 +1,6 @@
 defmodule TwitterClone.ChatApp.ChatSessieConsumer do
     use GenServer
     use AMQP
-  
     require IEx
   
     @channel :chat_app_channel
@@ -11,7 +10,7 @@ defmodule TwitterClone.ChatApp.ChatSessieConsumer do
     @enforce_keys [:channel]
     defstruct [:channel, :queue]
   
-    def start_link(chatroom), do: GenServer.start_link(@me, chatroom, name: @me)
+    def start_link(chatroom), do: GenServer.start_link(@me, chatroom, name: String.to_atom("consumer: #{chatroom}"))
   
     def init(chatroom) do
       {:ok, amqp_channel} = AMQP.Application.get_channel(@channel)
@@ -41,34 +40,33 @@ defmodule TwitterClone.ChatApp.ChatSessieConsumer do
     def handle_info({:basic_deliver, payload, meta_info}, %@me{} = state) do
       payload
       |> Jason.decode!()
-      # |> proces_message(meta_info.delivery_tag, state)
-      |> IO.puts()
+      |> proces_message(meta_info.delivery_tag, state)
   
       {:noreply, %@me{} = state}
     end
   
     ## Helper functions ##
   
-    # defp proces_message(%{"command" => "create", "name_can" => can_id} = msg, tag, state) do
-    #   result = ManagerApproach.GarbageCanManager.add_garbage_can(can_id)
-    #   Basic.ack(state.channel, tag)
+    defp proces_message(%{"command" => "create_chatlog", "chatroom" => chatroom}, tag, state) do
+      TwitterClone.ChatApp.ChatManager.create_chat(chatroom)
+      Basic.ack(state.channel, tag)
   
-    #   # Note: not always necessary to send the whole request back. If frontend would keep track of the request unique tag, then you should only send that tag and the result back in order to reduce bandwidth.
-    #   case result do
-    #     {:ok, _} ->
-    #       %{request: msg, result: "succeeded"}
-    #       |> ManagerApproach.WebserverPublisher.send_message()
+      # Note: not always necessary to send the whole request back. If frontend would keep track of the request unique tag, then you should only send that tag and the result back in order to reduce bandwidth.
+      # case result do
+      #   {:ok, _} ->
+      #     %{request: msg, result: "succeeded"}
+      #     |> ManagerApproach.WebserverPublisher.send_message()
   
-    #     {:error, :already_exists} ->
-    #       %{request: msg, result: "failed", reason: "Already exists"}
-    #       |> ManagerApproach.WebserverPublisher.send_message()
-    #   end
-    # end
+      #   {:error, :already_exists} ->
+      #     %{request: msg, result: "failed", reason: "Already exists"}
+      #     |> ManagerApproach.WebserverPublisher.send_message()
+      # end
+    end
   
     defp rabbitmq_setup(%@me{} = state) do
       # Create exchange, queue and bind them.
       :ok = AMQP.Exchange.declare(state.channel, @exchange, :direct)
-      {:ok, _consumer_and_msg_info} = AMQP.Queue.declare(state.channel, state.queue)
+      # {:ok, _consumer_and_msg_info} = AMQP.Queue.declare(state.channel, state.queue)
       :ok = AMQP.Queue.bind(state.channel, state.queue, @exchange, routing_key: state.queue)
   
       # Limit unacknowledged messages to 1. THIS IS VERY SLOW! Just doing this for debugging

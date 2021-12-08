@@ -3,15 +3,16 @@ defmodule TwitterClone.UserApp.ChatSessiePublisher do
     require IEx
     require Logger
 
+    alias TwitterClone.UserApp.ChatSessiePublisher, as: ChatSessiePublisher
+
     @channel :chat_app_channel
     @exchange "chatapp-server"
-  
     @me __MODULE__
   
     @enforce_keys [:channel]
     defstruct [:channel, :queue]
   
-    def start_link(chatroom), do: GenServer.start_link(@me, chatroom, name: String.to_atom(chatroom))
+    def start_link(chatroom), do: GenServer.start_link(@me, chatroom, name: String.to_atom("publisher: #{chatroom}"))
     def get_chatlog(), do: GenServer.call(@me, {:get_chatlog})
     def send_message(message), do: GenServer.call(@me, {:send_message, message})
   
@@ -20,13 +21,15 @@ defmodule TwitterClone.UserApp.ChatSessiePublisher do
         {:ok, amqp_channel} = AMQP.Application.get_channel(@channel)
         state = %@me{channel: amqp_channel, queue: chatroom}
         rabbitmq_setup(state)
-    
+        payload = Jason.encode!(%{command: "create_chatlog", chatroom: state.queue})
+        :ok = AMQP.Basic.publish(state.channel, @exchange, state.queue, payload)
+
         {:ok, state}
     end
 
     @impl true
     def handle_call({:get_chatlog}, _, %@me{channel: c, queue: q} = state) do
-        payload = Jason.encode!(%{command: "get"})
+        payload = Jason.encode!(%{command: "get_chatlog", chatroom: q})
         :ok = AMQP.Basic.publish(c, @exchange, q, payload)
         {:reply, :chat_started, state}
     end
@@ -35,7 +38,7 @@ defmodule TwitterClone.UserApp.ChatSessiePublisher do
     def handle_call({:send_message, message}, _, %@me{channel: c, queue: q} = state) do
         payload = Jason.encode!(%{command: "send_message", message: message})
         :ok = AMQP.Basic.publish(c, @exchange, q, payload)
-        {:reply, :chat_started, state}
+        {:reply, :chatroom_init, state}
     end
   
     ## Helper functions ##
