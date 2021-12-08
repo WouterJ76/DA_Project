@@ -15,7 +15,7 @@ defmodule TwitterClone.MixProject do
   def application do
     [
       extra_applications: [:logger, :amqp],
-      mod: {TwitterClone.Application, []}
+      mod: {TwitterClone, []}
     ]
   end
 
