@@ -6,17 +6,16 @@ defmodule TwitterClone.ChatApp.ChatSessieConsumer do
   
     @channel :chat_app_channel
     @exchange "chatapp-server"
-    @queue "chat-sessie-queue"
     @me __MODULE__
   
     @enforce_keys [:channel]
-    defstruct [:channel]
+    defstruct [:channel, :queue]
   
-    def start_link(args \\ []), do: GenServer.start_link(@me, args, name: @me)
+    def start_link(chatroom), do: GenServer.start_link(@me, chatroom, name: @me)
   
-    def init(_opts) do
+    def init(chatroom) do
       {:ok, amqp_channel} = AMQP.Application.get_channel(@channel)
-      state = %@me{channel: amqp_channel}
+      state = %@me{channel: amqp_channel, queue: chatroom}
       rabbitmq_setup(state)
       {:ok, state}
     end
@@ -69,13 +68,13 @@ defmodule TwitterClone.ChatApp.ChatSessieConsumer do
     defp rabbitmq_setup(%@me{} = state) do
       # Create exchange, queue and bind them.
       :ok = AMQP.Exchange.declare(state.channel, @exchange, :direct)
-      {:ok, _consumer_and_msg_info} = AMQP.Queue.declare(state.channel, @queue)
-      :ok = AMQP.Queue.bind(state.channel, @queue, @exchange, routing_key: @queue)
+      {:ok, _consumer_and_msg_info} = AMQP.Queue.declare(state.channel, state.queue)
+      :ok = AMQP.Queue.bind(state.channel, state.queue, @exchange, routing_key: state.queue)
   
       # Limit unacknowledged messages to 1. THIS IS VERY SLOW! Just doing this for debugging
       :ok = Basic.qos(state.channel, prefetch_count: 1)
   
       # Register the GenServer process as a consumer. Consumer pid argument (3rd arg) defaults to self()
-      {:ok, _unused_consumer_tag} = Basic.consume(state.channel, @queue)
+      {:ok, _unused_consumer_tag} = Basic.consume(state.channel, state.queue)
     end
   end

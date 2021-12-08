@@ -18,5 +18,4 @@ defmodule TwitterClone.UserApp.User do
     defp via_tuple(username) do
         {:via, Registry, {TwitterClone.UserApp.MyRegistry, {:user, username}}}
     end
-    
 end
