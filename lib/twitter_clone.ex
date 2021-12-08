@@ -1,18 +1,14 @@
 defmodule TwitterClone do
-  @moduledoc """
-  Documentation for `TwitterClone`.
-  """
+  use Application
+  
+  def start(_type, _args) do
+    children = [
+      #UserApp
+      TwitterClone.UserApp.Supervisor,
+      TwitterClone.ChatApp.Supervisor
+    ]
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> TwitterClone.hello()
-      :world
-
-  """
-  def hello do
-    :world
+    opts = [strategy: :one_for_one, name: TwitterClone.Supervisor]
+    Supervisor.start_link(children, opts)
   end
 end
