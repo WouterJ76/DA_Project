@@ -3,20 +3,41 @@ defmodule TwitterClone.ChatApp.Chat do
 
     @me __MODULE__
 
-    defstruct chatroom: nil, chatlog: %{}
+    def start_link(chatroom), do: GenServer.start_link(@me, chatroom, name: via_tuple(chatroom))
 
-    def start_link(chatroom) do
-        chatroom = chatroom || raise "No chatroom found \":chatroom\""
-        GenServer.start_link(@me,chatroom, name: via_tuple(chatroom))
+    def add_message(chatroom, sender, message) do
+        get_id(chatroom)
+        |> GenServer.cast({:add_message, sender, message})
+    end
+
+    def get_chatlog(chatroom) do
+        get_id(chatroom)
+        |> GenServer.call({:get_chatlog})
+    end
+    
+    @impl true
+    def init(chatroom) do
+        state = %{chatroom: chatroom, chatlog: []}
+        {:ok, state}
     end
 
     @impl true
-    def init(args) do
-        {:ok, args}
+    def handle_call({:get_chatlog}, _, state) do
+        {:reply, state.chatlog, state}
+    end
+
+    @impl true
+    def handle_cast({:add_message, sender, message}, state) do
+        new_state = %{state | chatlog: state.chatlog ++ [{sender, message}]}
+        {:noreply, new_state}
     end
 
     defp via_tuple(chatroom) do
         {:via, Registry, {TwitterClone.ChatApp.MyRegistry, {:chatsessie, chatroom}}}
     end
-    
+
+    defp get_id(chatroom) do
+        [head | _] = Registry.lookup(TwitterClone.ChatApp.MyRegistry, {:chatsessie, chatroom})
+        elem(head, 0)
+    end
 end

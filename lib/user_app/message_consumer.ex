@@ -1,7 +1,6 @@
 defmodule TwitterClone.UserApp.MessageConsumer do
     use GenServer
     use AMQP
-  
     require IEx
   
     @channel :chat_app_channel
