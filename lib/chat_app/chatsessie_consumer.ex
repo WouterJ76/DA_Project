@@ -1,16 +1,23 @@
 defmodule TwitterClone.ChatApp.ChatSessieConsumer do
     use GenServer
     use AMQP
-    require IEx
 
     @channel :chat_app_channel
     @exchange "chatapp-server"
     @me __MODULE__
+
+    #########
+    ## API ##
+    #########
   
     @enforce_keys [:channel]
     defstruct [:channel, :queue]
   
     def start_link(chatroom), do: GenServer.start_link(@me, chatroom, name: String.to_atom("consumer: #{chatroom}"))
+
+    ###############
+    ## Callbacks ##
+    ###############
   
     def init(chatroom) do
       {:ok, amqp_channel} = AMQP.Application.get_channel(@channel)
@@ -19,21 +26,15 @@ defmodule TwitterClone.ChatApp.ChatSessieConsumer do
       {:ok, state}
     end
   
-    # Confirmation sent by the broker after registering this process as a consumer
     def handle_info({:basic_consume_ok, %{consumer_tag: _consumer_tag}}, %@me{} = state) do
-      # do nothing
       {:noreply, state}
     end
   
-    # Sent by the broker when the consumer is unexpectedly cancelled (such as after a queue deletion)
     def handle_info({:basic_cancel, %{consumer_tag: _consumer_tag}}, %@me{} = state) do
-      # do nothing
       {:stop, :normal, state}
     end
   
-    # Confirmation sent by the broker to the consumer process after a Basic.cancel
     def handle_info({:basic_cancel_ok, %{consumer_tag: _consumer_tag}}, %@me{} = state) do
-      # do nothing
       {:noreply, state}
     end
   
@@ -45,7 +46,9 @@ defmodule TwitterClone.ChatApp.ChatSessieConsumer do
       {:noreply, %@me{} = state}
     end
   
+    ######################
     ## Helper functions ##
+    ######################
   
     defp proces_message(%{"command" => "create_chatroom"}, tag, state) do
       TwitterClone.ChatApp.ChatManager.create_chatroom(state.queue)
@@ -58,15 +61,10 @@ defmodule TwitterClone.ChatApp.ChatSessieConsumer do
     end
   
     defp rabbitmq_setup(%@me{} = state) do
-      # Create exchange, queue and bind them.
       :ok = AMQP.Exchange.declare(state.channel, @exchange, :direct)
       {:ok, _consumer_and_msg_info} = AMQP.Queue.declare(state.channel, state.queue)
       :ok = AMQP.Queue.bind(state.channel, state.queue, @exchange, routing_key: state.queue)
-  
-      # Limit unacknowledged messages to 1. THIS IS VERY SLOW! Just doing this for debugging
       :ok = Basic.qos(state.channel, prefetch_count: 1)
-  
-      # Register the GenServer process as a consumer. Consumer pid argument (3rd arg) defaults to self()
       {:ok, _unused_consumer_tag} = Basic.consume(state.channel, state.queue)
     end
   end

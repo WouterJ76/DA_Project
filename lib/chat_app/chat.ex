@@ -3,6 +3,10 @@ defmodule TwitterClone.ChatApp.Chat do
 
     @me __MODULE__
 
+    #########
+    ## API ##
+    #########
+
     def start_link(chatroom), do: GenServer.start_link(@me, chatroom, name: via_tuple(chatroom))
 
     def add_message(chatroom, sender, message) do
@@ -15,6 +19,10 @@ defmodule TwitterClone.ChatApp.Chat do
         |> GenServer.call({:get_chatlog})
     end
     
+    ###############
+    ## Callbacks ##
+    ###############
+
     @impl true
     def init(chatroom) do
         state = %{chatroom: chatroom, chatlog: []}
@@ -31,6 +39,10 @@ defmodule TwitterClone.ChatApp.Chat do
         new_state = %{state | chatlog: state.chatlog ++ [{sender, message}]}
         {:noreply, new_state}
     end
+
+    ######################
+    ## Helper functions ##
+    ######################
 
     defp via_tuple(chatroom) do
         {:via, Registry, {TwitterClone.ChatApp.MyRegistry, {:chatsessie, chatroom}}}

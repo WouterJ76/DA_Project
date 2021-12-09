@@ -1,9 +1,15 @@
 defmodule TwitterClone.UserApp.ChatSessiePublisher do
     use GenServer
 
+    alias TwitterClone.UserApp.{MyRegistry}
+
     @channel :chat_app_channel
     @exchange "chatapp-server"
     @me __MODULE__
+
+    #########
+    ## API ##
+    #########
   
     @enforce_keys [:channel]
     defstruct [:channel, :queue]
@@ -19,6 +25,10 @@ defmodule TwitterClone.UserApp.ChatSessiePublisher do
         get_id(chatroom)
         |> GenServer.call({:send_message, sender, message})
     end
+
+    ###############
+    ## Callbacks ##
+    ###############
 
     @impl true
     def init(chatroom) do
@@ -42,7 +52,9 @@ defmodule TwitterClone.UserApp.ChatSessiePublisher do
         {:reply, :message_send_to_queue, state}
     end
   
+    ######################
     ## Helper functions ##
+    ######################
   
     defp rabbitmq_setup(%@me{} = state) do
         # Create exchange, queue and bind them.
@@ -52,11 +64,11 @@ defmodule TwitterClone.UserApp.ChatSessiePublisher do
     end
 
     defp via_tuple(chatroom) do
-        {:via, Registry, {TwitterClone.UserApp.MyRegistry, {:chatroom, chatroom}}}
+        {:via, Registry, {MyRegistry, {:chatroom, chatroom}}}
     end
 
     defp get_id(chatroom) do
-        [head | _] = Registry.lookup(TwitterClone.UserApp.MyRegistry, {:chatroom, chatroom})
+        [head | _] = Registry.lookup(MyRegistry, {:chatroom, chatroom})
         elem(head, 0)
     end
 end

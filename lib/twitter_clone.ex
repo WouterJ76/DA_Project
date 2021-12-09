@@ -1,9 +1,6 @@
 defmodule TwitterClone do
-  use Application
-  
   def start(_type, _args) do
     children = [
-      #UserApp
       TwitterClone.UserApp.Supervisor,
       TwitterClone.ChatApp.Supervisor
     ]

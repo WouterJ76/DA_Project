@@ -1,12 +1,17 @@
 defmodule TwitterClone.UserApp.UserManager do
     use GenServer
 
-    alias TwitterClone.UserApp.{User, UserDynSup}
+    alias TwitterClone.UserApp.{User, UserDynSup, ChatSessiePublisher}
+    alias TwitterClone.ChatApp.{ChatDynSup}
 
     @me __MODULE__
 
-    def start_link(args) do
-        GenServer.start_link(@me, args, name: @me)
+    #########
+    ## API ##
+    #########
+
+    def start_link(_args) do
+        GenServer.start_link(@me, :no_args, name: @me)
     end
 
     def create_user(username) do
@@ -21,6 +26,10 @@ defmodule TwitterClone.UserApp.UserManager do
     
     def list_chatrooms(), do: GenServer.call(@me, :list_chatrooms)
 
+    ###############
+    ## Callbacks ##
+    ###############
+
     @impl true
     def init(_args) do
         state = %{users: [], chatrooms: []}
@@ -34,7 +43,7 @@ defmodule TwitterClone.UserApp.UserManager do
             {:reply, {:error, :already_exists}, state}
 
         false ->
-            DynamicSupervisor.start_child(UserDynSup, {User, [username: username]})
+            DynamicSupervisor.start_child(UserDynSup, {User, [username]})
             new_state = %{state | users: [username | state.users]}
             {:reply, "created user: #{username}", new_state}
         end
@@ -48,9 +57,9 @@ defmodule TwitterClone.UserApp.UserManager do
             {:reply, {:error, :already_exists}, state}
 
         false ->
-            DynamicSupervisor.start_child(UserDynSup, {TwitterClone.UserApp.ChatSessiePublisher, chatroom})
-            DynamicSupervisor.start_child(TwitterClone.ChatApp.ChatDynSup, {TwitterClone.ChatApp.ChatSessieConsumer, chatroom})
-            TwitterClone.UserApp.ChatSessiePublisher.create_chatroom(chatroom)
+            DynamicSupervisor.start_child(UserDynSup, {ChatSessiePublisher, chatroom})
+            DynamicSupervisor.start_child(ChatDynSup, {ChatSessieConsumer, chatroom})
+            ChatSessiePublisher.create_chatroom(chatroom)
             new_state = %{state | chatrooms: [chatroom | state.chatrooms]}
             {:reply, "created chatroom: #{chatroom}", new_state}
         end

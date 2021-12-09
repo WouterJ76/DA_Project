@@ -3,18 +3,27 @@ defmodule TwitterClone.UserApp.User do
 
     @me __MODULE__
 
-    defstruct username: nil
+    #########
+    ## API ##
+    #########
 
-    def start_link(args) do
-        username = args[:username] || raise "No username found \":username\""
-        GenServer.start_link(@me,username, name: via_tuple(username))
+    def start_link(username) do
+        GenServer.start_link(@me, username, name: via_tuple(username))
     end
+
+    ###############
+    ## Callbacks ##
+    ###############
 
     @impl true
-    def init(args) do
-        state = %@me{username: args}
+    def init(username) do
+        state = %{username: username}
         {:ok, state}
     end
+
+    ######################
+    ## Helper functions ##
+    ######################
 
     defp via_tuple(username) do
         {:via, Registry, {TwitterClone.UserApp.MyRegistry, {:user, username}}}
