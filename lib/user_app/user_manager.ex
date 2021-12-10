@@ -53,9 +53,10 @@ defmodule TwitterClone.UserApp.UserManager do
     def handle_call({:start_chatroom, user1, user2}, _from, state) do
         if Enum.member?(state.users, user1) && Enum.member?(state.users, user2) do
             chatroom = Enum.reduce([user1, user2], fn user, acc -> "#{acc}-#{user}" end)
-            case Enum.member?(state.chatrooms, chatroom) do
+            chatroom2 = Enum.reduce([user1, user2], fn user, acc -> "#{user}-#{acc}" end)
+            case Enum.member?(state.chatrooms, chatroom) || Enum.member?(state.chatrooms, chatroom2) do
             true ->
-                {:reply, {:error, :already_exists}, state}
+                {:reply, chatroom, state}
 
             false ->
                 DynamicSupervisor.start_child(UserDynSup, {ChatroomPublisher, chatroom})
