@@ -1,4 +1,4 @@
-defmodule TwitterClone.ChatApp.MessagePublisher do
+defmodule TwitterClone.ChatApp.NotificationPublisher do
     use GenServer
 
     alias TwitterClone.ChatApp.{MyRegistry}
@@ -15,11 +15,11 @@ defmodule TwitterClone.ChatApp.MessagePublisher do
     ## API ##
     #########
   
-    def start_link(chatroom), do: GenServer.start_link(@me, chatroom, name: via_tuple(chatroom))
+    def start_link(chatroom), do: GenServer.start_link(@me, chatroom <> "-notifications", name: via_tuple(chatroom))
 
-    def send_message(chatroom, message) do
+    def send_notification(chatroom) do
         get_id(chatroom)
-        |> GenServer.call(@me, {:send_message, message})
+        |> GenServer.call(:send_notification)
     end
 
     ###############
@@ -27,19 +27,19 @@ defmodule TwitterClone.ChatApp.MessagePublisher do
     ###############
   
     @impl true
-    def init(username) do
+    def init(chatroom) do
         {:ok, amqp_channel} = AMQP.Application.get_channel(@channel)
-        state = %@me{channel: amqp_channel, queue: username}
+        state = %@me{channel: amqp_channel, queue: chatroom}
         rabbitmq_setup(state)
     
         {:ok, state}
     end
   
     @impl true
-    def handle_call({:send_message, message}, _, %@me{channel: c} = state) do
-        payload = Jason.encode!(%{command: "get", chatroom: message})
-        :ok = AMQP.Basic.publish(c, @exchange, state.queue, payload)
-        {:reply, :chat_started, state}
+    def handle_call(:send_notification, _, %@me{channel: c, queue: q} = state) do
+        payload = Jason.encode!(%{command: "send_notification"})
+        :ok = AMQP.Basic.publish(c, @exchange, q, payload)
+        {:reply, :notification_send, state}
     end
   
     ######################

@@ -1,7 +1,8 @@
 defmodule TwitterClone.ChatApp.ChatManager do
     use GenServer
 
-    alias TwitterClone.ChatApp.{Chat, ChatDynSup}
+    alias TwitterClone.ChatApp.{Chat, ChatDynSup, NotificationPublisher}
+    alias TwitterClone.UserApp.{UserDynSup, NotificationConsumer}
 
     @me __MODULE__
 
@@ -17,6 +18,10 @@ defmodule TwitterClone.ChatApp.ChatManager do
         GenServer.call(@me, {:create_chatroom, chatroom})
     end
 
+    def start_publisher_consumer(chatroom) do
+        GenServer.call(@me, {:start_publisher_consumer, chatroom})
+    end
+
     def list_chatrooms(), do: GenServer.call(@me, :list_chatrooms)
 
     ###############
@@ -29,19 +34,12 @@ defmodule TwitterClone.ChatApp.ChatManager do
         {:ok, state}
     end
 
-    # @impl true
-    # def handle_call({:test, chatroom}, _from, %@me{} = state) do
-    #     case Map.has_key?(state.chatrooms, chatroom) do
-    #     true ->
-    #         {:reply, {:error, :already_exists}, state}
-
-    #     false ->
-    #         DynamicSupervisor.start_child(ChatDynSup, {TwitterClone.ChatApp.MessagePublisher, username2})
-    #         DynamicSupervisor.start_child(TwitterClone.UserApp.UserDynSup, {TwitterClone.UserApp.MessageConsumer, username2})
-    #         new_chatsessie = Map.put_new(state.chatrooms, {username1, username2}, %{username1: username1, username2: username2})
-    #         {:reply, :chatroom_created, %{state | chatrooms: new_chatsessie}}
-    #     end
-    # end
+    @impl true
+    def handle_call({:start_publisher_consumer, chatroom}, _from, state) do
+        DynamicSupervisor.start_child(ChatDynSup, {NotificationPublisher, chatroom})
+        DynamicSupervisor.start_child(UserDynSup, {NotificationConsumer, chatroom})
+        {:reply, :notification_service_created, state}
+    end
 
     @impl true
     def handle_call({:create_chatroom, chatroom}, _from, state) do

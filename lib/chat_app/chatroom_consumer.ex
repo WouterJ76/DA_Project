@@ -13,7 +13,7 @@ defmodule TwitterClone.ChatApp.ChatSessieConsumer do
     @enforce_keys [:channel]
     defstruct [:channel, :queue]
   
-    def start_link(chatroom), do: GenServer.start_link(@me, chatroom, name: String.to_atom("consumer: #{chatroom}"))
+    def start_link(chatroom), do: GenServer.start_link(@me, chatroom, name: String.to_atom("chatroom consumer: #{chatroom}"))
 
     ###############
     ## Callbacks ##
@@ -52,11 +52,13 @@ defmodule TwitterClone.ChatApp.ChatSessieConsumer do
   
     defp proces_message(%{"command" => "create_chatroom"}, tag, state) do
       TwitterClone.ChatApp.ChatManager.create_chatroom(state.queue)
+      TwitterClone.ChatApp.ChatManager.start_publisher_consumer(state.queue)
       Basic.ack(state.channel, tag)
     end
 
     defp proces_message(%{"command" => "send_message", "sender" => sender, "message" => message}, tag, state) do
       TwitterClone.ChatApp.Chat.add_message(state.queue, sender, message)
+      TwitterClone.ChatApp.NotificationPublisher.send_notification(state.queue)
       Basic.ack(state.channel, tag)
     end
   

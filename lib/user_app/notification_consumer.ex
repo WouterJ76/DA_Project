@@ -1,4 +1,4 @@
-defmodule TwitterClone.UserApp.MessageConsumer do
+defmodule TwitterClone.UserApp.NotificationConsumer do
     use GenServer
     use AMQP
   
@@ -13,15 +13,15 @@ defmodule TwitterClone.UserApp.MessageConsumer do
     @enforce_keys [:channel]
     defstruct [:channel, :queue]
   
-    def start_link(username), do: GenServer.start_link(@me, username, name: @me)
+    def start_link(chatroom), do: GenServer.start_link(@me, chatroom <> "-notifications", name: String.to_atom("notification consumer: #{chatroom}"))
 
     ###############
     ## Callbacks ##
     ###############
   
-    def init(username) do
+    def init(chatroom) do
       {:ok, amqp_channel} = AMQP.Application.get_channel(@channel)
-      state = %@me{channel: amqp_channel, queue: username}
+      state = %@me{channel: amqp_channel, queue: chatroom}
       rabbitmq_setup(state)
       {:ok, state}
     end
@@ -50,8 +50,8 @@ defmodule TwitterClone.UserApp.MessageConsumer do
     ## Helper functions ##
     ######################
 
-    defp proces_message(msg, tag, state) do
-      TwitterClone.ChatApp.ChatManager.create_chatroom(state.queue)
+    defp proces_message(%{"command" => "send_notification"}, tag, state) do
+      IO.puts("ping")
       Basic.ack(state.channel, tag)
     end
   

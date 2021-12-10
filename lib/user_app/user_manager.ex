@@ -51,17 +51,21 @@ defmodule TwitterClone.UserApp.UserManager do
 
     @impl true
     def handle_call({:start_chatroom, user1, user2}, _from, state) do
-        chatroom = Enum.reduce([user1, user2], fn user, acc -> "#{acc}-#{user}" end)
-        case Enum.member?(state.chatrooms, chatroom) do
-        true ->
-            {:reply, {:error, :already_exists}, state}
+        if Enum.member?(state.users, user1) && Enum.member?(state.users, user2) do
+            chatroom = Enum.reduce([user1, user2], fn user, acc -> "#{acc}-#{user}" end)
+            case Enum.member?(state.chatrooms, chatroom) do
+            true ->
+                {:reply, {:error, :already_exists}, state}
 
-        false ->
-            DynamicSupervisor.start_child(UserDynSup, {ChatSessiePublisher, chatroom})
-            DynamicSupervisor.start_child(ChatDynSup, {ChatSessieConsumer, chatroom})
-            result = ChatSessiePublisher.create_chatroom(chatroom)
-            new_state = %{state | chatrooms: [chatroom | state.chatrooms]}
-            {:reply, result, new_state}
+            false ->
+                DynamicSupervisor.start_child(UserDynSup, {ChatSessiePublisher, chatroom})
+                DynamicSupervisor.start_child(ChatDynSup, {ChatSessieConsumer, chatroom})
+                chatroom = ChatSessiePublisher.create_chatroom(chatroom)
+                new_state = %{state | chatrooms: [chatroom | state.chatrooms]}
+                {:reply, chatroom, new_state}
+            end
+        else
+            {:reply, {:error, :user_not_exists}, state}
         end
     end
 
