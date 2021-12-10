@@ -1,31 +1,31 @@
 defmodule TwitterClone.UserApp.User do
-    use GenServer
+  use GenServer
 
-    @me __MODULE__
+  @me __MODULE__
 
-    #########
-    ## API ##
-    #########
+  #########
+  ## API ##
+  #########
 
-    def start_link(username) do
-        GenServer.start_link(@me, username, name: via_tuple(username))
-    end
+  def start_link(username) do
+    GenServer.start_link(@me, username, name: via_tuple(username))
+  end
 
-    ###############
-    ## Callbacks ##
-    ###############
+  ###############
+  ## Callbacks ##
+  ###############
 
-    @impl true
-    def init(username) do
-        state = %{username: username}
-        {:ok, state}
-    end
+  @impl true
+  def init(username) do
+    state = %{username: username}
+    {:ok, state}
+  end
 
-    ######################
-    ## Helper functions ##
-    ######################
+  ######################
+  ## Helper functions ##
+  ######################
 
-    defp via_tuple(username) do
-        {:via, Registry, {TwitterClone.UserApp.MyRegistry, {:user, username}}}
-    end
+  defp via_tuple(username) do
+    {:via, Registry, {TwitterClone.UserApp.MyRegistry, {:user, username}}}
+  end
 end
