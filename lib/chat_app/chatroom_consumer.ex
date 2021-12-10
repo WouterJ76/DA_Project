@@ -1,4 +1,4 @@
-defmodule TwitterClone.ChatApp.ChatSessieConsumer do
+defmodule TwitterClone.ChatApp.ChatroomConsumer do
     use GenServer
     use AMQP
 

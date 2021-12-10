@@ -1,4 +1,4 @@
-defmodule TwitterClone.UserApp.ChatSessiePublisher do
+defmodule TwitterClone.UserApp.ChatroomPublisher do
     use GenServer
 
     alias TwitterClone.UserApp.{MyRegistry}
