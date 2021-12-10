@@ -4,7 +4,7 @@ defmodule TwitterClone.ChatApp.MessagePublisher do
     alias TwitterClone.ChatApp.{MyRegistry}
 
     @channel :chat_app_channel
-    @exchange "message-server"
+    @exchange "notification-server"
   
     @me __MODULE__
   

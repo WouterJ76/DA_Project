@@ -3,7 +3,7 @@ defmodule TwitterClone.UserApp.MessageConsumer do
     use AMQP
   
     @channel :chat_app_channel
-    @exchange "message-server"
+    @exchange "notification-server"
     @me __MODULE__
 
     #########

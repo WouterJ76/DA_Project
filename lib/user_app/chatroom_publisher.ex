@@ -42,7 +42,7 @@ defmodule TwitterClone.UserApp.ChatSessiePublisher do
     def handle_call(:create_chatroom, _, %@me{channel: c, queue: q} = state) do
         payload = Jason.encode!(%{command: "create_chatroom"})
         :ok = AMQP.Basic.publish(c, @exchange, q, payload)
-        {:reply, "created chatroom #{q}", state}
+        {:reply, q, state}
     end
 
     @impl true

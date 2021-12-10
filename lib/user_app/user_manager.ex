@@ -2,7 +2,7 @@ defmodule TwitterClone.UserApp.UserManager do
     use GenServer
 
     alias TwitterClone.UserApp.{User, UserDynSup, ChatSessiePublisher}
-    alias TwitterClone.ChatApp.{ChatDynSup}
+    alias TwitterClone.ChatApp.{ChatDynSup, ChatSessieConsumer}
 
     @me __MODULE__
 
@@ -59,9 +59,9 @@ defmodule TwitterClone.UserApp.UserManager do
         false ->
             DynamicSupervisor.start_child(UserDynSup, {ChatSessiePublisher, chatroom})
             DynamicSupervisor.start_child(ChatDynSup, {ChatSessieConsumer, chatroom})
-            ChatSessiePublisher.create_chatroom(chatroom)
+            result = ChatSessiePublisher.create_chatroom(chatroom)
             new_state = %{state | chatrooms: [chatroom | state.chatrooms]}
-            {:reply, "created chatroom: #{chatroom}", new_state}
+            {:reply, result, new_state}
         end
     end
 
