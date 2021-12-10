@@ -3,7 +3,7 @@ defmodule TwitterClone.UserApp.MessageConsumer do
     use AMQP
   
     @channel :chat_app_channel
-    @exchange "user-server"
+    @exchange "message-server"
     @me __MODULE__
 
     #########
@@ -41,8 +41,7 @@ defmodule TwitterClone.UserApp.MessageConsumer do
     def handle_info({:basic_deliver, payload, meta_info}, %@me{} = state) do
       payload
       |> Jason.decode!()
-      # |> proces_message(meta_info.delivery_tag, state)
-      |> IO.puts()
+      |> proces_message(meta_info.delivery_tag, state)
   
       {:noreply, %@me{} = state}
     end
@@ -50,6 +49,11 @@ defmodule TwitterClone.UserApp.MessageConsumer do
     ######################
     ## Helper functions ##
     ######################
+
+    defp proces_message(msg, tag, state) do
+      TwitterClone.ChatApp.ChatManager.create_chatroom(state.queue)
+      Basic.ack(state.channel, tag)
+    end
   
     defp rabbitmq_setup(%@me{} = state) do
       :ok = AMQP.Exchange.declare(state.channel, @exchange, :direct)

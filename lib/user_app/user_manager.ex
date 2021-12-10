@@ -49,11 +49,11 @@ defmodule TwitterClone.UserApp.UserManager do
         end
     end
 
-    @impl true
+    @impl truehatrooms, chatroom) do
+        true ->
     def handle_call({:start_chatroom, user1, user2}, _from, state) do
         chatroom = Enum.reduce([user1, user2], fn user, acc -> "#{acc}-#{user}" end)
-        case Enum.member?(state.chatrooms, chatroom) do
-        true ->
+        case Enum.member?(state.c
             {:reply, {:error, :already_exists}, state}
 
         false ->

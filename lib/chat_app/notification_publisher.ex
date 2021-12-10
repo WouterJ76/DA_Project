@@ -4,7 +4,7 @@ defmodule TwitterClone.ChatApp.MessagePublisher do
     alias TwitterClone.ChatApp.{MyRegistry}
 
     @channel :chat_app_channel
-    @exchange "user-server"
+    @exchange "message-server"
   
     @me __MODULE__
   
@@ -15,15 +15,13 @@ defmodule TwitterClone.ChatApp.MessagePublisher do
     ## API ##
     #########
   
-    def start_link(username), do: GenServer.start_link(@me, username, name: via_tuple(username))
+    def start_link(chatroom), do: GenServer.start_link(@me, chatroom, name: via_tuple(chatroom))
 
-    def send_chatlog({sender, receiver}) do
-        get_id(receiver)
-        |> GenServer.call(@me, {:get_chatlog, {sender, receiver}})
+    def send_message(chatroom, message) do
+        get_id(chatroom)
+        |> GenServer.call(@me, {:send_message, message})
     end
 
-    def send_message(message), do: GenServer.call(@me, {:send_message, message})
-  
     ###############
     ## Callbacks ##
     ###############
@@ -38,18 +36,6 @@ defmodule TwitterClone.ChatApp.MessagePublisher do
     end
   
     @impl true
-    def handle_call({:start_chat, sender, receiver}, _, %@me{channel: c} = state) do
-        payload = Jason.encode!(%{command: "create", sender: sender, receiver: receiver})
-        :ok = AMQP.Basic.publish(c, @exchange, state.queue, payload)
-        {:reply, :chat_started, state}
-    end
-
-    def handle_call({:get_chatlog, {sender, receiver}}, _, %@me{channel: c} = state) do
-        payload = Jason.encode!(%{command: "get", chatroom: {sender, receiver}})
-        :ok = AMQP.Basic.publish(c, @exchange, state.queue, payload)
-        {:reply, :chat_started, state}
-    end
-
     def handle_call({:send_message, message}, _, %@me{channel: c} = state) do
         payload = Jason.encode!(%{command: "get", chatroom: message})
         :ok = AMQP.Basic.publish(c, @exchange, state.queue, payload)
@@ -67,12 +53,12 @@ defmodule TwitterClone.ChatApp.MessagePublisher do
         :ok = AMQP.Queue.bind(state.channel, state.queue, @exchange, routing_key: state.queue)
     end
 
-    defp via_tuple(username) do
-        {:via, Registry, {MyRegistry, {:username, username}}}
+    defp via_tuple(chatroom) do
+        {:via, Registry, {MyRegistry, {:notifications, chatroom}}}
     end
 
-    defp get_id(username) do
-        [head | _] = Registry.lookup(MyRegistry, {:username, username})
+    defp get_id(chatroom) do
+        [head | _] = Registry.lookup(MyRegistry, {:notifications, chatroom})
         elem(head, 0)
     end
 end
