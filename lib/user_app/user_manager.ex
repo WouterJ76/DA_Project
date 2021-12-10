@@ -56,7 +56,13 @@ defmodule TwitterClone.UserApp.UserManager do
             chatroom2 = Enum.reduce([user1, user2], fn user, acc -> "#{user}-#{acc}" end)
             case Enum.member?(state.chatrooms, chatroom) || Enum.member?(state.chatrooms, chatroom2) do
             true ->
-                {:reply, chatroom, state}
+                case Enum.member?(state.chatrooms, chatroom) do
+                    true ->
+                        {:reply, chatroom, state}
+                    
+                    false ->
+                        {:reply, chatroom2, state}
+                end
 
             false ->
                 DynamicSupervisor.start_child(UserDynSup, {ChatroomPublisher, chatroom})
