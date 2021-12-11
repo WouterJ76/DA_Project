@@ -3,7 +3,7 @@ defmodule TwitterClone do
     children = [
       TwitterClone.UserApp.Supervisor,
       TwitterClone.ChatApp.Supervisor,
-      TwitterClone.PostApp.Posts
+      TwitterClone.PostApp
     ]
 
     opts = [strategy: :one_for_one, name: TwitterClone.Supervisor]
